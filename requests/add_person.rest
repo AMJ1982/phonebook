@@ -1,0 +1,7 @@
+post https://fathomless-ocean-79189.herokuapp.com/app/persons
+Content-Type: application/json
+
+{
+    "name": "Anatinus S.",
+    "number": "040-0000000"
+}
