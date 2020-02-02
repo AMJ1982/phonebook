@@ -1,8 +1,10 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
 // T3.9: Asennettu projektikansiossa middleware Cors (npm install cors --save), ja otettu se käyttöön tässä koodissa.
 
@@ -50,6 +52,7 @@ let persons = [
     }
 ]
 // Apufunktiot
+// Generoi tietueelle yksilöllisen id:n. Ei käytössä tällä hetkellä, koska id muodostetaan tietokannassa.
 const generateId = () => {
   return Math.floor(Math.random() * 10000)
 }
@@ -61,30 +64,32 @@ const findDuplicates = (name) => {
 
 // Kaikki tiedot
 app.get('/app/persons/', (req, res) => {
-  res.json(persons)
+  //res.json(persons)
+  Person.find({}).then(result => {
+    res.json(result.map(person => person.toJSON()))
+  })
 })
 // Palvelimen info
 app.get('/info', (req, res) => {
-  res.send(`<p>Phonebook has info for ${persons.length} people</p>
-            <p>${new Date()}`)
+  Person.collection.countDocuments({})
+  .then(contactAmount => 
+    res.send(`<p>Phonebook has info for ${contactAmount} people</p>
+              <p>${new Date()}`))
+  .catch(error => next(error))  
 })
 // Yksittäinen tieto
-app.get('/app/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const person = persons.find(p => p.id === id)
-
-  if(persons) {
-    res.json(person)
-  } else {
-    res.status(404).end()
-  }
+app.get('/app/persons/:id', (req, res, next) => {  
+  Person.findById(req.params.id).then(returnedPerson => 
+    res.json(returnedPerson.toJSON()))
+    .catch(error => next(error))
 })
 // Tiedon poistaminen
-app.delete('/app/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(p => p.id !== id)
-  res.status(204).end()
+app.delete('/app/persons/:id', (req, res, next) => {
+  Person.findByIdAndDelete(req.params.id)
+    .then(response => res.status(204).end())
+    .catch(error => next(error))
 })
+
 // Uusi tieto
 app.post('/app/persons', (req, res) => {
   const newPerson = req.body
@@ -97,10 +102,38 @@ app.post('/app/persons', (req, res) => {
     return res.status(409).json({error: "Name must be unique"})
   }
   
-  newPerson.id = generateId()
-  persons = persons.concat(newPerson) 
-  res.json(newPerson)  
+  const person = new Person({
+    name: newPerson.name, 
+    number: newPerson.number
+  })
+
+  person.save()
+    .then(addedPerson => res.json(addedPerson.toJSON()))
+    .catch(error => next(error))
 })
+
+// Numeron päivittäminen
+app.put('/app/persons/:id', (req, res, next) => {
+  const body = req.body
+  const person = {
+    name: body.name, 
+    number: body.number,
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person, {new: true})
+    .then(updatedPerson => res.json(updatedPerson.toJSON()))
+    .catch(error => next(error))
+})  
+
+// Virheenkäsittelijä
+const errorHandler = (err, req, res, next) => {
+  console.log(err.message)
+  if(err.name === 'CastError' && err.kind === 'ObjectId') {
+    return res.status(400).send({error: 'malformed id'})
+  }
+  next(error)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => console.log(`Server running on ${PORT}`))

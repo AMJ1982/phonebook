@@ -1,7 +1,7 @@
-post https://phonebookbackendamj.herokuapp.com/app/persons
+post http://localhost:3001/app/persons
 Content-Type: application/json
 
 {
-    "name": "Test O. Man",
-    "number": "040-5555555"
+    "name": "Anatinus",
+    "number": "060-7777777"
 }
