@@ -91,17 +91,8 @@ app.delete('/app/persons/:id', (req, res, next) => {
 })
 
 // Uusi tieto
-app.post('/app/persons', (req, res) => {
+app.post('/app/persons', (req, res, next) => {
   const newPerson = req.body
-  // Puuttuuko numero tai nimi  
-  if(!newPerson.name || !newPerson.number) {
-    return res.status(400).json({error: "Provide name and number"})
-  }  
-  // Löytyykö henkilö jo listalta
-  if(findDuplicates(newPerson.name)) {
-    return res.status(409).json({error: "Name must be unique"})
-  }
-  
   const person = new Person({
     name: newPerson.name, 
     number: newPerson.number
@@ -126,10 +117,12 @@ app.put('/app/persons/:id', (req, res, next) => {
 })  
 
 // Virheenkäsittelijä
-const errorHandler = (err, req, res, next) => {
-  console.log(err.message)
-  if(err.name === 'CastError' && err.kind === 'ObjectId') {
+const errorHandler = (error, req, res, next) => {
+  console.log('Error.message virheenkäsittelijästä', error.message)
+  if(error.name === 'CastError' && error.kind === 'ObjectId') {
     return res.status(400).send({error: 'malformed id'})
+  } else if(error.name === 'ValidationError') {
+    return res.status(400).json({error: error.message})
   }
   next(error)
 }
