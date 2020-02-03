@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const url = process.env.MONGODB_URI;
+const mongoose = require('mongoose')
+const url = process.env.MONGODB_URI
 // Validaattori unique-arvoja varten
-const uniqueValidator = require('mongoose-unique-validator');
+const uniqueValidator = require('mongoose-unique-validator')
 
 // useFindAndModify-asetus falseksi, jotta findByIdAndUpdate()-metodi toimisi
 mongoose.set('useFindAndModify', false);
