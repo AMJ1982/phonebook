@@ -6,11 +6,8 @@ const uniqueValidator = require('mongoose-unique-validator')
 // useFindAndModify-asetus falseksi, jotta findByIdAndUpdate()-metodi toimisi
 mongoose.set('useFindAndModify', false)
 
-mongoose.connect(url, {
-  useNewUrlParser: true, 
-  useUnifiedTopology: true
-}).then(success => 
-    console.log('Connection established'))
+mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true})
+  .then(success => console.log('Connection established'))
   .catch(error => console.log('Error with connection', error))
 
 schema = new mongoose.Schema({
